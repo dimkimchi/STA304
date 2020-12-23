@@ -1,0 +1,233 @@
+---
+title: "Reproducing study on effectiveness of voter persuasion efforts using propensity score matching"
+author: "Diane Kim"
+date: "12/18/2020"
+output:
+  pdf_document: default
+---
+
+
+```{r warning=FALSE, include=FALSE}
+# loading packages
+library(xtable)
+library(huxtable)
+library(tidyverse)
+library(arm)
+library(broom)
+library(knitr)
+
+#Setup working directory
+setwd("C:/Users/Diane/Downloads/UofT 2020-2021/STA304/Final Project")
+
+#loading replication data from article
+load("Replication Data for Unresponsive and Unpersuaded The Unintended Effects of Voter Persuasion Efforts/wi-08-public-data.RData")
+
+#removing missing data
+survey_data <- dta.sub %>% 
+  filter(obama != "NA", q_age != "NA")
+```
+# Absract
+A field experiment was performed by Bailey et al. to see how persuasion efforts such as canvassing, phone calls, and mailings would affect voter behaviour during the 2008 US election. They found that persuasive efforts in favour of Barack Obama did not increase his candidate support and might have reduced support instead. In this paper, the reproducibility of this result will be examined and compared by using propensity score matching. \
+
+\textit{Keywords}: propensity score matching, 2008 US election, causal inference
+
+# Introduction
+In this paper, the reproducibility of the study performed by Michael A. Bailey, Daniel J. Hopkins,
+and Todd Rogers will be evaluated by conducting the same study and comparing results. The goal
+of the study was to measure the persuasive effects of canvassing, phone calls, and mailings during
+the 2008 US presidential election. They found that the persuasion efforts did not increase support for Obama and might have had a slight negative effect instead. Data was collected in Wisconsin where 56,000 voters were
+randomly assigned to persuasive canvassing, phone calls, and/or mailing in favour of Barack
+Obama. A follow-up telephone survey was then conducted to find who their preferred candidate
+was, where 12,442 replies were recorded. From the collected data, outcomes such as voter
+intention and voter turnout were estimated. The main methods used were multiple imputation
+using chained equations which was used to address the large amount of missing data and a
+non-parametric selection model which was used to estimate the outcome. Additionally, Bayesian
+bootstrapping, inverse propensity weighting, and Heckman selection were used alongside the
+previously mentioned methods. \
+
+Instead of using the methods that Bailey et al. used, propensity score matching will be used to determine the causality of the persuasion effects on support for Obama. Propensity scores are generally used to analyse observational studies in a way so that it emulates a random controlled  trial (Austin 2011). This is helpful because observational studies do not allow for random assignment of treatment and so it is difficult to determine cause and effect relationships between variables. Bailey et al. used inverse propensity weighting which uses propensity scores to simulate a sample based on the distribution of the baseline characteristics (Austin 2011). In this paper, propensity score matching will be used instead because it is more relevant to this course and also to see if using a different propensity score method will have a different result. Next, we will look at the data that Bailey et al. collected. \
+
+# Methods
+
+## Data
+
+The persuasion efforts that were used in the Bailey et al. article were all in support of Barack Obama and included canvassing, phone calls, and mailings. This took place in Wisconsin where 56,000 people were randomly assigned to one or more of the persuasive methods or no persuasive methods. Later, a follow-up survey over the phone was done to ask who their preferred candidate was and 12,422 responses were collected. The exact persuasion script and survey questions can be found in the original article (Bailey et al. 2016). Wisconsin was chosen as the sampling frame because it is a battleground state (ie. the state is not republican or democratic) and it had equal advertising for both candidates. The data set was not altered from the original to ensure that the results would be similar. \
+
+
+Table 0: Baseline characteristics of survey respondents
+```{r echo=FALSE}
+#Table 1 from the article
+knitr::include_graphics('table1.png')
+```
+ \
+ 
+## Model
+
+The goal of the article was to determine the causal effects of persuasive methods on voter behaviour. There are many methods that can do this even just with using propensity scores (Austin 2011) but we will be using propensity score matching. Other than being a popular method (King and Nielsen 2019), this is an appropriate method to use here because the experiment that Bailey et al. did was essentially an observational study because it was not controlled. Even though they randomly assigned a treatment and non-treatment group, only a fifth of the original sample had completed the follow-up survey. This strongly indicates a bias or external factor in the study. When using propensity score matching, there needs to be a treatment and outcome of interest. Here, the treatment is the different persuasion efforts and the outcome of interest is support for Obama. The propensity scores for each treatment was measured and support for Obama was also calculated for each treatment method. \
+
+The variables used in the model in this paper were the same as the model in the article. It includes their results from the survey, the treatment group that they were in, if they were black, hispanic, male, protestant, or catholic, and their age. \
+
+# Results
+
+From the results propensity score matching, support for Obama was not affected by any of the persuasion methods. (The propensity score matching tables can be found in the appendix). While all of the methods had close to zero effect, mailing had the most effect on support for Obama out of the three. On the other hand, canvassing and phone calls had a very small negative effect on support Obama. \
+
+# Discussion
+
+From the results of the propensity score matching, we can conclude that the persuasion methods did not improve or lower support for Obama which differs slightly from the conclusion that the article made. The article found that the persuasion effects had a small negative impact of support for Obama between one to two percent while we found that they had close to zero effect. This means that using propensity score matching and inverse propensity score weighting can have different results. \
+
+A possible reason that the persuasion methods did not have an effect might be because the group that carried out this experiment was not well known and since they were not recognised or seen as an authority, their words did not have much impact. Additionally, the persuasion methods that they used might not have been very influencing because the script was not persuading. \
+
+## Weaknesses
+
+A major weakness in the article is the large proportion of people who did not complete the survey. This probably resulted in non-response bias which could have an effect on the outcome. 
+Lastly, there are inherent issues with using propensity score matching for causal inference. King and Nielsen describe these issues as increased imbalance, inefficiency, model dependence, research discretion, and statistical bias (2019). \
+
+## Next Steps
+
+While Wisconsin was chosen to the sampling frame in the article by Bailey et al. because both republic and democratic parties have approximately equal influence and advertising (Bailey et al. 2016), it would be interesting to see if the influence that persuasion methods have would change depending on the states prior bias towards on party. \
+
+Since there are some issues with using propensity score matching, other methods to measure cause and effect could be used and compared with. For example, difference in differences. \
+
+```{r echo=FALSE, warning=FALSE}
+#Creating models
+propensity_score_canvass <- glm(canvass ~ male + q_age + black + hispanic + protestant + catholic + turnout.score.c, data = survey_data, family = binomial)
+
+propensity_score_phonecall <- glm(phonecall ~ male + q_age + black + hispanic + protestant + catholic + turnout.score.c, data = survey_data, family = binomial)
+
+propensity_score_mail <- glm(mail ~ male + q_age + black + hispanic + protestant + catholic + turnout.score.c, data = survey_data, family = binomial)
+
+#Propensity score matching for canvass
+survey_data <- 
+  augment(propensity_score_canvass, 
+          data = survey_data,
+          type.predict = "response") %>% 
+  dplyr::select(-.resid, -.std.resid, -.hat, -.sigma, -.cooksd) 
+
+survey_data <- 
+  survey_data %>% 
+  arrange(.fitted, canvass)
+
+survey_data$treated <- 
+  if_else(survey_data$canvass == 0, 0, 1)
+
+survey_data$treated <- 
+  as.integer(survey_data$treated)
+
+matches <- arm::matching(z = survey_data$treated, 
+                         score = survey_data$.fitted)
+
+survey_data <- cbind(survey_data, matches)
+
+survey_data_matched <- 
+  survey_data %>% 
+  filter(match.ind != 0) %>% 
+  dplyr::select(-match.ind, -pairs, -treated)
+
+#head(survey_data_matched)
+
+propensity_score_regression <- lm(obama ~ svy_result + canvass + phonecall + mail + black + hispanic + turnout.score.c + male + protestant + catholic + q_age + q_phonematchscore,
+                data = survey_data_matched)
+
+canvass_propensity <- huxtable::huxreg(propensity_score_regression, error_pos = "same") 
+caption(canvass_propensity) <- "Propensity score matching for canvass treatment"
+canvass_propensity
+```
+
+```{r echo=FALSE, warning=FALSE}
+#Propensity score matching for phonecall
+survey_data <- dta.sub %>% 
+  filter(obama != "NA", q_age != "NA")
+
+survey_data <- 
+  augment(propensity_score_phonecall, 
+          data = survey_data,
+          type.predict = "response") %>% 
+  dplyr::select(-.resid, -.std.resid, -.hat, -.sigma, -.cooksd) 
+
+survey_data <- 
+  survey_data %>% 
+  arrange(.fitted, canvass)
+
+survey_data$treated <- 
+  if_else(survey_data$canvass == 0, 0, 1)
+
+survey_data$treated <- 
+  as.integer(survey_data$treated)
+
+matches <- arm::matching(z = survey_data$treated, 
+                         score = survey_data$.fitted)
+
+survey_data <- cbind(survey_data, matches)
+
+survey_data_matched <- 
+  survey_data %>% 
+  filter(match.ind != 0) %>% 
+  dplyr::select(-match.ind, -pairs, -treated)
+
+#head(survey_data_matched)
+
+propensity_score_regression <- lm(obama ~ svy_result + canvass + phonecall + mail + black + hispanic + turnout.score.c + male + protestant + catholic + q_age + q_phonematchscore,
+                data = survey_data_matched)
+
+phone_propensity <- huxtable::huxreg(propensity_score_regression, error_pos = "same") %>% set_caption("Propensity score matching for phone call treatment")
+phone_propensity
+```
+
+```{r echo=FALSE, warning=FALSE}
+#Propensity score matching for mail
+survey_data <- dta.sub %>% 
+  filter(obama != "NA", q_age != "NA")
+
+survey_data <- 
+  augment(propensity_score_mail, 
+          data = survey_data,
+          type.predict = "response") %>% 
+  dplyr::select(-.resid, -.std.resid, -.hat, -.sigma, -.cooksd) 
+
+survey_data <- 
+  survey_data %>% 
+  arrange(.fitted, canvass)
+
+survey_data$treated <- 
+  if_else(survey_data$canvass == 0, 0, 1)
+
+survey_data$treated <- 
+  as.integer(survey_data$treated)
+
+matches <- arm::matching(z = survey_data$treated, 
+                         score = survey_data$.fitted)
+
+survey_data <- cbind(survey_data, matches)
+
+survey_data_matched <- 
+  survey_data %>% 
+  filter(match.ind != 0) %>% 
+  dplyr::select(-match.ind, -pairs, -treated)
+
+#head(survey_data_matched)
+
+propensity_score_regression <- lm(obama ~ svy_result + canvass + phonecall + mail + black + hispanic + turnout.score.c + male + protestant + catholic + q_age + q_phonematchscore,
+                data = survey_data_matched)
+
+mail_propensity <- huxtable::huxreg(propensity_score_regression, error_pos = "same") %>% set_caption("Propensity score matching for mail treatment")
+mail_propensity
+
+```
+# References
+
+Austin P. C. (2011). An Introduction to Propensity Score Methods for Reducing the Effects of Confounding in Observational Studies. Multivariate behavioral research, 46(3), 399–424. https://doi.org/10.1080/00273171.2011.568786
+
+Bailey, M.A., Hopkins, D.J. & Rogers, T. Unresponsive and Unpersuaded: The Unintended
+Consequences of a Voter Persuasion Effort. Polit Behav 38, 713–746 (2016).
+https://doi-org.myaccess.library.utoronto.ca/10.1007/s11109-016-9338-8
+
+Hopkins, Daniel. (2016). Replication Data for: Unresponsive and Unpersuaded: The Unintended
+Effects of Voter Persuasion Efforts, 2008 . Harvard Dataverse.
+https://doi.org/10.7910/DVN/FRWBPJ
+
+King, G., & Nielsen, R. (2019). Why Propensity Scores Should Not Be Used for Matching. Political Analysis, 27(4), 435-454. https://doi.org/10.1017/pan.2019.11
+
+\
+
+# Appendix
+
